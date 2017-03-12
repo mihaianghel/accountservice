@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -114,5 +115,27 @@ public class ATMControllerTest {
         mockMvc.perform(get("/atm/" + ACCOUNT_NUMBER + "/withdraw?amount=" + AMOUNT.toString()))
                 .andExpect(status().isOk())
                 .andExpect(content().string("{\"amount\":10,\"code\":\"SUCCESSFUL_WITHDRAWAL\",\"notes\":[{\"denomination\":5,\"count\":2}]}"));
+    }
+
+    @Test
+    public void shouldReplenish() throws Exception {
+        when(validationService.isValidForReplenishment(anyList())).thenReturn(true);
+
+        mockMvc.perform(put("/atm/replenish")
+                .content("{\"notes\": [{\"denomination\": 5,\"count\": 10},{\"denomination\": 20,\"count\": 10}]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Successfully replenished with notes: [{denomination=5, count=10}, {denomination=20, count=10}]"));
+    }
+
+    @Test
+    public void shouldNotReplenish() throws Exception {
+        when(validationService.isValidForReplenishment(anyList())).thenReturn(false);
+
+        mockMvc.perform(put("/atm/replenish")
+                .content("{\"notes\": [{\"denomination\": 15,\"count\": 10},{\"denomination\": 22,\"count\": 10}]}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Invalid notes inserted"));
     }
 }

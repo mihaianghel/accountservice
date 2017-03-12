@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 
@@ -16,13 +17,14 @@ public class CounterServiceImplTest {
     @Test
     public void shouldCorrectAmountWithSmallestNumberOfNotes() throws Exception {
 
-        Count count = counterService.count(Arrays.asList(30, 20, 10, 5, 5), new BigDecimal(35));
+        Count count = counterService.count(Arrays.asList(5,5,20,20,10,10,10,30), new BigDecimal(80));
 
         System.out.println(count);
 
-        assertEquals(new BigDecimal(35).intValue(), count.getSum());
-        assertEquals(2, count.getValues().size());
-        assertTrue(count.getValues().contains(5));
-        assertTrue(count.getValues().contains(30));
+        assertEquals(new BigDecimal(80).intValue(), count.getSum());
+        assertEquals(5, count.getValues().size());
+        assertEquals(1, Collections.frequency(count.getValues(), 30));
+        assertEquals(2, Collections.frequency(count.getValues(), 20));
+        assertEquals(2, Collections.frequency(count.getValues(), 5));
     }
 }
