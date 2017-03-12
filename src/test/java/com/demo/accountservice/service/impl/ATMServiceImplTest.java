@@ -66,6 +66,7 @@ public class ATMServiceImplTest {
         String accNumber = "00123";
         BigDecimal amount = BigDecimal.TEN;
 
+        when(counterService.count(atmService.getAvailableNotes(), amount)).thenReturn(new Count(amount.intValue(), Arrays.asList(5,5)));
         when(accountService.withdraw(accNumber, amount)).thenReturn(Optional.empty());
 
         Withdrawal withdrawal = atmService.withdraw(accNumber, amount);
@@ -79,6 +80,7 @@ public class ATMServiceImplTest {
         String accNumber = "00123";
         BigDecimal amount = BigDecimal.TEN;
 
+        when(counterService.count(atmService.getAvailableNotes(), amount)).thenReturn(new Count(amount.intValue(), Arrays.asList(5,5)));
         when(accountService.withdraw(accNumber, amount)).thenReturn(Optional.of(BigDecimal.ZERO));
 
         Withdrawal withdrawal = atmService.withdraw(accNumber, amount);
@@ -92,7 +94,6 @@ public class ATMServiceImplTest {
         String accNumber = "00123";
         BigDecimal amount = BigDecimal.TEN;
 
-        when(accountService.withdraw(accNumber, amount)).thenReturn(Optional.of(BigDecimal.TEN));
         when(counterService.count(atmService.getAvailableNotes(), amount)).thenReturn(new Count(1, Collections.emptyList()));
 
         Withdrawal withdrawal = atmService.withdraw(accNumber, amount);

@@ -27,7 +27,7 @@ public class ATMServiceImpl implements ATMService {
 
     private static Collection<Integer> NOTES = new ArrayList<>();
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ATMServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger( ATMServiceImpl.class );
 
     @Autowired
     private AccountService accountService;
@@ -40,10 +40,10 @@ public class ATMServiceImpl implements ATMService {
 
     @PostConstruct
     public void init() {
-        NOTES.addAll(Arrays.asList(notes.split(","))
+        NOTES.addAll( Arrays.asList( notes.split( "," ) )
                 .stream()
-                .map(n -> Integer.valueOf(n))
-                .collect(toList()));
+                .map( n -> Integer.valueOf( n ) )
+                .collect( toList() ) );
     }
 
     @Override
@@ -51,21 +51,21 @@ public class ATMServiceImpl implements ATMService {
 
         List<Integer> allNotes = new ArrayList<>();
 
-        notes.stream().forEach(n -> IntStream.rangeClosed(1,  n.getCount())
-                .forEach(i -> allNotes.add(n.getDenomination())));
+        notes.stream().forEach( n -> IntStream.rangeClosed( 1, n.getCount() )
+                .forEach( i -> allNotes.add( n.getDenomination() ) ) );
 
-        NOTES.addAll(allNotes);
-        LOGGER.info("Added the following amount in the ATM: " + allNotes.stream().mapToInt(Integer::intValue).sum());
+        NOTES.addAll( allNotes );
+        LOGGER.info( "Added the following amount in the ATM: " + allNotes.stream().mapToInt( Integer::intValue ).sum() );
     }
 
     @Override
     public List<Integer> getAvailableNotes() {
-        return new ArrayList<>(NOTES);
+        return new ArrayList<>( NOTES );
     }
 
     @Override
     public Optional<BigDecimal> checkBalance(String accountNumber) {
-        return accountService.checkBalance(accountNumber);
+        return accountService.checkBalance( accountNumber );
     }
 
     @Override
@@ -73,31 +73,33 @@ public class ATMServiceImpl implements ATMService {
 
         Withdrawal withdrawal;
 
-        Optional<BigDecimal> optionalAmountToWithdraw = accountService.withdraw(accountNumber, amount);
+        Count count = counterService.count( new ArrayList<>( NOTES ), amount );
 
-        if (optionalAmountToWithdraw.isPresent()) {
+        if (canDisburseRequestedAmount(amount, count)) {
 
-            BigDecimal amountToWithdraw = optionalAmountToWithdraw.get();
+            Optional<BigDecimal> optionalAmountToWithdraw = accountService.withdraw( accountNumber, amount );
 
-            if (!amountToWithdraw.equals(BigDecimal.ZERO)) {
+            if (optionalAmountToWithdraw.isPresent()) {
 
-                Count count = counterService.count(new ArrayList<>(NOTES), amount);
+                BigDecimal amountToWithdraw = optionalAmountToWithdraw.get();
 
-                if (canReturnRequestedAmount(amount, count)) {
-                    NOTES = CollectionUtils.disjunction(NOTES, count.getValues());
-                    withdrawal = new Withdrawal(amount, SUCCESSFUL_WITHDRAWAL, collectDenominations(count.getValues()));
-                    LOGGER.info(String.format(SUCCESSFUL_WITHDRAWAL.getMessage(), amount.toString(), accountNumber));
+                if (!amountToWithdraw.equals( BigDecimal.ZERO )) {
+
+                    NOTES = CollectionUtils.disjunction( NOTES, count.getValues() );
+
+                    withdrawal = new Withdrawal( amount, SUCCESSFUL_WITHDRAWAL, collectDenominations( count.getValues() ) );
+                    LOGGER.info( String.format( SUCCESSFUL_WITHDRAWAL.getMessage(), amount.toString(), accountNumber ) );
                 } else {
-                    withdrawal = new Withdrawal(BigDecimal.ZERO, INSUFFICIENT_FUNDS_IN_ATM, Collections.emptyList());
-                    LOGGER.error(INSUFFICIENT_FUNDS_IN_ATM.getMessage());
+                    withdrawal = new Withdrawal( BigDecimal.ZERO, INSUFFICIENT_FUNDS_IN_ACCOUNT, Collections.emptyList() );
+                    LOGGER.error( format( INSUFFICIENT_FUNDS_IN_ACCOUNT.getMessage(), amount.toString(), accountNumber ) );
                 }
             } else {
-                withdrawal = new Withdrawal(BigDecimal.ZERO, INSUFFICIENT_FUNDS_IN_ACCOUNT, Collections.emptyList());
-                LOGGER.error(format(INSUFFICIENT_FUNDS_IN_ACCOUNT.getMessage(), amount.toString(), accountNumber));
+                withdrawal = new Withdrawal( BigDecimal.ZERO, ACCOUNT_UNKNOWN, Collections.emptyList() );
+                LOGGER.error( format( ACCOUNT_UNKNOWN.getMessage(), accountNumber ) );
             }
         } else {
-            withdrawal = new Withdrawal(BigDecimal.ZERO, ACCOUNT_UNKNOWN, Collections.emptyList());
-            LOGGER.error(format(ACCOUNT_UNKNOWN.getMessage(), accountNumber));
+            withdrawal = new Withdrawal( BigDecimal.ZERO, INSUFFICIENT_FUNDS_IN_ATM, Collections.emptyList() );
+            LOGGER.error( INSUFFICIENT_FUNDS_IN_ATM.getMessage() );
         }
 
         return withdrawal;
@@ -106,20 +108,20 @@ public class ATMServiceImpl implements ATMService {
     private List<Note> collectDenominations(List<Integer> values) {
         List<Note> notes = new ArrayList<>();
 
-        int fiveFrequency = Collections.frequency(values, 5);
-        int tenFrequency = Collections.frequency(values, 10);
-        int twentyFrequency = Collections.frequency(values, 20);
-        int fiftyFrequency = Collections.frequency(values, 50);
+        int fiveFrequency = Collections.frequency( values, 5 );
+        int tenFrequency = Collections.frequency( values, 10 );
+        int twentyFrequency = Collections.frequency( values, 20 );
+        int fiftyFrequency = Collections.frequency( values, 50 );
 
-        if (fiveFrequency > 0) notes.add(new Note(5, fiveFrequency));
-        if (tenFrequency > 0) notes.add(new Note(10, tenFrequency));
-        if (twentyFrequency > 0) notes.add(new Note(20, twentyFrequency));
-        if (fiftyFrequency > 0) notes.add(new Note(50, fiftyFrequency));
+        if (fiveFrequency > 0) notes.add( new Note( 5, fiveFrequency ) );
+        if (tenFrequency > 0) notes.add( new Note( 10, tenFrequency ) );
+        if (twentyFrequency > 0) notes.add( new Note( 20, twentyFrequency ) );
+        if (fiftyFrequency > 0) notes.add( new Note( 50, fiftyFrequency ) );
 
         return notes;
     }
 
-    private boolean canReturnRequestedAmount(BigDecimal amount, Count count) {
+    private boolean canDisburseRequestedAmount(BigDecimal amount, Count count) {
         return count.getSum() == amount.intValue();
     }
 }
