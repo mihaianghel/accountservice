@@ -45,13 +45,13 @@ RunAs - Spring Boot App
 ##Using the application
 APIs:
 ```
-/GET http://localhost:8080/atm/{accountNumber}/balance
+GET http://localhost:8080/atm/{accountNumber}/balance
 ```
 ```
-/GET http://localhost:8080/atm/{accountNumber}/withdraw?amount=35
+GET http://localhost:8080/atm/{accountNumber}/withdraw?amount=35
 ```
 ```
-/PUT http://localhost:8080/atm/replenish
+PUT http://localhost:8080/atm/replenish
 
 Payload example:
 {
