@@ -25,6 +25,7 @@ The accounts are loaded automatically at startup and stored in a distributed in-
 * when the application starts, the notes will be loaded - these are stored separately per each instance of the application instead of the distributed cache because this information represents the state of a single machine and it shouldn’t be shared across all ATMs in the network.
 * there is no authentication required. The account information are sent in the request. 
 * no funding feature implemented
+* the initial funding of the ATM is £600, chosen randomly for testing purposes
 
 
 ##Build and start the app
